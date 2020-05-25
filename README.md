@@ -1,6 +1,8 @@
 # Gaze Preserving CycleGAN (GPCyceGAN)
 PyTorch implementation for the training procedure described in [Driver Gaze Estimation in the Real World: Overcoming the Eyeglass Challenge](http://cvrr.ucsd.edu/publications/2020/GPCycleGAN.pdf).
 
+Parts of the CycleGAN code have been adapted from the [PyTorch-CycleGAN](https://github.com/aitorzip/PyTorch-CycleGAN) respository.
+
 ## Installation
 1) Clone this repository
 2) Install Pipenv:
