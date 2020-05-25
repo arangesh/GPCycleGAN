@@ -23,21 +23,37 @@ pipenv install https://download.pytorch.org/whl/cu100/torchvision-0.3.0-cp36-cp3
 ## Dataset
 1) Download the complete IR dataset for driver gaze classification using [this link](https://drive.google.com/file/d/1iJTlVytGsmQu9EeB1Iw1-cYwPlOx4-XW/view?usp=sharing).
 2) Unzip the file.
+3) Prepare the train, val and test splits as follows:
+```shell
+python prepare_gaze_data.py --dataset-dir=/path/to/lisat_gaze_data
+```
 
 ## Training
 The prescribed three-step training procedure for the classification network can be carried out as follows:
+### Step 1: Train the gaze classifier on images without eyeglasses
 ```shell
 pipenv shell # activate virtual environment
-python train_stage1.py --dataset-root-path=/path/to/dataset/ --snapshot=./weights/squeezenet1_1_imagenet.pth --version=1_1 --FSA
-python train_stage2.py --dataset-root-path=/path/to/dataset/ --snapshot=/path/to/snapshot/from/stage1/training --version=1_1 --FSA
+python gazenet.py --dataset-root-path=/path/to/lisat_gaze_data/all_data/ --version=1_1 --snapshot=./weights/squeezenet1_1_imagenet.pth --random-transforms
+```
+### Step 2: Train the GPCycleGAN model using the gaze classifier from Step 1
+```shell
+python gpcyclegan.py --dataset-root-path=/path/to/lisat_gaze_data/ --version=1_1 --snapshot-dir=/path/to/trained/gaze-classifier/directory/ --random-transforms
+```
+### Step 3.1: Create fake images using the trained GPCycleGAN model
+```shell
+python create_fake_images.py --dataset-root-path=/path/to/lisat_gaze_data/all_data/ --version=1_1 --snapshot-dir=/path/to/trained/gpcyclegan/directory/
+```
+### Step 3.2: Finetune the gaze classifier on all fake images
+```shell
+python gazenet-ft.py --dataset-root-path=/path/to/lisat_gaze_data/all_data/ --version=1_1 --snapshot-dir=/path/to/trained/gaze-classifier/directory/ --random-transforms
 exit # exit virtual environment
 ```
 
 ## Inference
-Pretrained weights for SqueezeNet v1.1 using the two-stage FSA loss can be found [here](https://github.com/arangesh/GPCycleGAN/blob/master/weights/squeezenet_1_1.pth). Inference can be carried out using [this](https://github.com/arangesh/GPCycleGAN/blob/master/infer.py) script as follows:
+Inference can be carried out using [this](https://github.com/arangesh/GPCycleGAN/blob/master/infer.py) script as follows:
 ```shell
 pipenv shell # activate virtual environment
-python demo.py --video=/path/to/dataset/foot.mp4 --snapshot=/path/to/snapshot --version=1_1
+python infer.py --dataset-root-path=/path/to/lisat_gaze_data/all_data/ --split=test --version=1_1 --snapshot-dir=/path/to/trained/models/directory/
 exit # exit virtual environment
 ```
 

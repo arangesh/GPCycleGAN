@@ -79,9 +79,9 @@ def create_datasets(dataset_dir, use_symlinks=True):
     print('Done creating night dataset!')
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Prepare KITTI data')
-    parser.add_argument('-o', '--dataset-dir', default='/media/akshay/SSD1/lisat_gaze_data',
-                        help='The dataset directory [default "/media/akshay/SSD1/lisat_gaze_data"]')
+    parser = argparse.ArgumentParser(description='Prepare gaze dataset')
+    parser.add_argument('-o', '--dataset-dir', default='/home/akshay/data/lisat_gaze_data',
+                        help='The dataset directory [default "/home/akshay/data/lisat_gaze_data"]')
     parser.add_argument('-s', '--no-symlinks', action='store_true',
                         help='Copy files instead of making symlinks')
 
