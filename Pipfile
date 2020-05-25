@@ -13,6 +13,7 @@ matplotlib = "*"
 scipy = "*"
 opencv-python = "*"
 sklearn = "*"
+visdom = "*"
 
 [requires]
 python_version = "3.6"
