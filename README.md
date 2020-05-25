@@ -42,10 +42,11 @@ python gpcyclegan.py --dataset-root-path=/path/to/lisat_gaze_data/ --version=1_1
 ### Step 3.1: Create fake images using the trained GPCycleGAN model
 ```shell
 python create_fake_images.py --dataset-root-path=/path/to/lisat_gaze_data/all_data/ --version=1_1 --snapshot-dir=/path/to/trained/gpcyclegan/directory/
+cp /path/to/lisat_gaze_data/all_data/mean_std.mat /path/to/fake_data/mean_std.mat # copy over dataset mean/std information to fake data folder
 ```
 ### Step 3.2: Finetune the gaze classifier on all fake images
 ```shell
-python gazenet-ft.py --dataset-root-path=/path/to/lisat_gaze_data/all_data/ --version=1_1 --snapshot-dir=/path/to/trained/gaze-classifier/directory/ --random-transforms
+python gazenet-ft.py --dataset-root-path=/path/to/fake_data/ --version=1_1 --snapshot-dir=/path/to/trained/gaze-classifier/directory/ --random-transforms
 exit # exit virtual environment
 ```
 
