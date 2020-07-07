@@ -29,7 +29,7 @@ python prepare_gaze_data.py --dataset-dir=/path/to/lisat_gaze_data
 ```
 
 ## Training
-The prescribed three-step training procedure for the classification network can be carried out as follows:
+The prescribed three-step training procedure can be carried out as follows:
 ### Step 1: Train the gaze classifier on images without eyeglasses
 ```shell
 pipenv shell # activate virtual environment
