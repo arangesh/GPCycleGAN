@@ -12,71 +12,71 @@ def create_datasets(dataset_dir, use_symlinks=True):
     for split in splits:
         for activity in activity_classes:
             count = 0
-            os.makedirs(os.path.join(dataset_dir, 'all_data', split, activity), exist_ok=True)
-            images = glob.glob(os.path.join(dataset_dir, '*_*_*', split, activity, '*.jpg'))
+            os.makedirs(os.path.join(dataset_dir, 'ir_all_data', split, activity), exist_ok=True)
+            images = glob.glob(os.path.join(dataset_dir, 'ir_*_*', split, activity, '*.jpg'))
             for im in images:
                 if use_symlinks:
-                    os.symlink(im, os.path.join(dataset_dir, 'all_data', split, activity, '%.6d.jpg' % (count,)))
+                    os.symlink(im, os.path.join(dataset_dir, 'ir_all_data', split, activity, '%.6d.jpg' % (count,)))
                 else:
-                    shutil.copyfile(im, os.path.join(dataset_dir, 'all_data', split, activity, '%.6d.jpg' % (count,)))
+                    shutil.copyfile(im, os.path.join(dataset_dir, 'ir_all_data', split, activity, '%.6d.jpg' % (count,)))
                 count += 1
-    print('Done creating all_data dataset!')
+    print('Done creating ir_all_data dataset!')
 
     # no glasses
     for split in splits:
         for activity in activity_classes:
             count = 0
-            os.makedirs(os.path.join(dataset_dir, 'no_glasses', split, activity), exist_ok=True)
-            images = glob.glob(os.path.join(dataset_dir, 'no_glasses_*', split, activity, '*.jpg'))
+            os.makedirs(os.path.join(dataset_dir, 'ir_no_glasses', split, activity), exist_ok=True)
+            images = glob.glob(os.path.join(dataset_dir, 'ir_no_glasses_*', split, activity, '*.jpg'))
             for im in images:
                 if use_symlinks:
-                    os.symlink(im, os.path.join(dataset_dir, 'no_glasses', split, activity, '%.6d.jpg' % (count,)))
+                    os.symlink(im, os.path.join(dataset_dir, 'ir_no_glasses', split, activity, '%.6d.jpg' % (count,)))
                 else:
-                    shutil.copyfile(im, os.path.join(dataset_dir, 'no_glasses', split, activity, '%.6d.jpg' % (count,)))
+                    shutil.copyfile(im, os.path.join(dataset_dir, 'ir_no_glasses', split, activity, '%.6d.jpg' % (count,)))
                 count += 1
-    print('Done creating no_glasses dataset!')
+    print('Done creating ir_no_glasses dataset!')
 
     # with glasses
     for split in splits:
         for activity in activity_classes:
             count = 0
-            os.makedirs(os.path.join(dataset_dir, 'with_glasses', split, activity), exist_ok=True)
-            images = glob.glob(os.path.join(dataset_dir, 'with_glasses_*', split, activity, '*.jpg'))
+            os.makedirs(os.path.join(dataset_dir, 'ir_with_glasses', split, activity), exist_ok=True)
+            images = glob.glob(os.path.join(dataset_dir, 'ir_with_glasses_*', split, activity, '*.jpg'))
             for im in images:
                 if use_symlinks:
-                    os.symlink(im, os.path.join(dataset_dir, 'with_glasses', split, activity, '%.6d.jpg' % (count,)))
+                    os.symlink(im, os.path.join(dataset_dir, 'ir_with_glasses', split, activity, '%.6d.jpg' % (count,)))
                 else:
-                    shutil.copyfile(im, os.path.join(dataset_dir, 'with_glasses', split, activity, '%.6d.jpg' % (count,)))
+                    shutil.copyfile(im, os.path.join(dataset_dir, 'ir_with_glasses', split, activity, '%.6d.jpg' % (count,)))
                 count += 1
-    print('Done creating with_glasses dataset!')
+    print('Done creating ir_with_glasses dataset!')
 
     # day
     for split in splits:
         for activity in activity_classes:
             count = 0
-            os.makedirs(os.path.join(dataset_dir, 'day', split, activity), exist_ok=True)
-            images = glob.glob(os.path.join(dataset_dir, '*_day', split, activity, '*.jpg'))
+            os.makedirs(os.path.join(dataset_dir, 'ir_day', split, activity), exist_ok=True)
+            images = glob.glob(os.path.join(dataset_dir, 'ir_*_day', split, activity, '*.jpg'))
             for im in images:
                 if use_symlinks:
-                    os.symlink(im, os.path.join(dataset_dir, 'day', split, activity, '%.6d.jpg' % (count,)))
+                    os.symlink(im, os.path.join(dataset_dir, 'ir_day', split, activity, '%.6d.jpg' % (count,)))
                 else:
-                    shutil.copyfile(im, os.path.join(dataset_dir, 'day', split, activity, '%.6d.jpg' % (count,)))
+                    shutil.copyfile(im, os.path.join(dataset_dir, 'ir_day', split, activity, '%.6d.jpg' % (count,)))
                 count += 1
-    print('Done creating day dataset!')
+    print('Done creating ir_day dataset!')
 
     # night
     for split in splits:
         for activity in activity_classes:
             count = 0
-            os.makedirs(os.path.join(dataset_dir, 'night', split, activity), exist_ok=True)
-            images = glob.glob(os.path.join(dataset_dir, '*_night', split, activity, '*.jpg'))
+            os.makedirs(os.path.join(dataset_dir, 'ir_night', split, activity), exist_ok=True)
+            images = glob.glob(os.path.join(dataset_dir, 'ir_*_night', split, activity, '*.jpg'))
             for im in images:
                 if use_symlinks:
-                    os.symlink(im, os.path.join(dataset_dir, 'night', split, activity, '%.6d.jpg' % (count,)))
+                    os.symlink(im, os.path.join(dataset_dir, 'ir_night', split, activity, '%.6d.jpg' % (count,)))
                 else:
-                    shutil.copyfile(im, os.path.join(dataset_dir, 'night', split, activity, '%.6d.jpg' % (count,)))
+                    shutil.copyfile(im, os.path.join(dataset_dir, 'ir_night', split, activity, '%.6d.jpg' % (count,)))
                 count += 1
-    print('Done creating night dataset!')
+    print('Done creating ir_night dataset!')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Prepare gaze dataset')
