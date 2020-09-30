@@ -76,10 +76,19 @@ exit # exit virtual environment
 Inference can be carried out using [this](https://github.com/arangesh/GPCycleGAN/blob/master/infer.py) script as follows:
 ```shell
 pipenv shell # activate virtual environment
-python infer.py --dataset-root-path=/path/to/lisat_gaze_data/ir_all_data/ --split=test --version=1_1 --snapshot-dir=/path/to/trained/models/directory/
+python infer.py --dataset-root-path=/path/to/lisat_gaze_data/ir_all_data/ --split=test --version=1_1 --snapshot-dir=/path/to/trained/ir-models/directory/
 exit # exit virtual environment
 ```
+
+## Inference (RGB data)
+Inference can be carried out using [this](https://github.com/arangesh/GPCycleGAN/blob/master/infer.py) script as follows:
+```shell
+pipenv shell # activate virtual environment
+python infer.py --dataset-root-path=/path/to/lisat_gaze_data/rgb_all_data/ --split=val --version=1_1 --snapshot-dir=/path/to/trained/rgb-models/directory/
+exit # exit virtual environment
+```
+
+### Pre-trained Weights
 You can download our pre-trained (GPCycleGAN + gaze classifier) weights for both IR and RGB data using [this link](https://drive.google.com/file/d/1FbYhyoSbCSo6l0b08a6kMPIgLwf7FHC-/view?usp=sharing).
 
 Config files, logs, results and snapshots from running the above scripts will be stored in the `GPCycleGAN/experiments` folder by default.
-

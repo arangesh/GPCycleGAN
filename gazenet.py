@@ -6,8 +6,6 @@ import argparse
 
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
-from sklearn.utils.multiclass import unique_labels
 
 import torch
 import torch.optim as optim
@@ -16,6 +14,7 @@ import torch.nn.functional as F
 
 from models import SqueezeNet
 from datasets import GazeDataset
+from utils import plot_confusion_matrix
 
 
 parser = argparse.ArgumentParser('Options for training GazeNet in PyTorch...')
@@ -43,6 +42,7 @@ if all(args.version != x for x in ['1_0', '1_1']):
 
 # Output class labels
 activity_classes = ['Eyes Closed', 'Forward', 'Shoulder', 'Left Mirror', 'Lap', 'Speedometer', 'Radio', 'Rearview', 'Right Mirror']
+merged_activity_classes = ['Eyes Closed/Lap', 'Forward', 'Left Mirror', 'Speedometer', 'Radio', 'Rearview', 'Right Mirror']
 args.num_classes = len(activity_classes)
 
 # setup args
@@ -63,53 +63,6 @@ with open(os.path.join(args.output_dir, 'config.json'), 'w') as f:
 torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
-
-
-def plot_confusion_matrix(y_true, y_pred, classes, normalize=True, title=None, cmap=plt.cm.Blues):
-    """
-    This function prints and plots the confusion matrix.
-    Normalization can be applied by setting `normalize=True`.
-    """
-    if not title:
-        if normalize:
-            title = 'Normalized confusion matrix'
-        else:
-            title = 'Confusion matrix, without normalization'
-
-    # Compute confusion matrix
-    cm = confusion_matrix(y_true, y_pred)
-    # Only use the labels that appear in the data
-    #classes = classes[unique_labels(y_true, y_pred)]
-    if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-
-    fig3, ax3 = plt.subplots()
-    im = ax3.imshow(cm, interpolation='nearest', cmap=cmap)
-    ax3.figure.colorbar(im, ax=ax3)
-    # We want to show all ticks...
-    ax3.set(xticks=np.arange(cm.shape[1]),
-           yticks=np.arange(cm.shape[0]),
-           # ... and label them with the respective list entries
-           xticklabels=classes, yticklabels=classes,
-           title=title,
-           ylabel='True label',
-           xlabel='Predicted label')
-
-    # Rotate the tick labels and set their alignment.
-    plt.setp(ax3.get_xticklabels(), rotation=45, ha="right",
-             rotation_mode="anchor")
-
-    # Loop over data dimensions and create text annotations.
-    fmt = '.2f' if normalize else 'd'
-    thresh = cm.max() / 2.
-    for i in range(cm.shape[0]):
-        for j in range(cm.shape[1]):
-            ax3.text(j, i, format(cm[i, j], fmt),
-                    ha="center", va="center",
-                    color="white" if cm[i, j] > thresh else "black")
-    fig3.tight_layout()
-    fig3.savefig(os.path.join(args.output_dir, 'confusion_matrix.jpg'))
-    return
 
 
 kwargs = {'batch_size': args.batch_size, 'shuffle': True, 'num_workers': 6}
@@ -172,7 +125,6 @@ def train(netGaze, epoch):
 # validation function
 def val(netGaze):
     global best_accuracy
-    correct = 0
     netGaze.eval()
     pred_all = np.array([], dtype='int64')
     target_all = np.array([], dtype='int64')
@@ -186,24 +138,22 @@ def val(netGaze):
         scores = netGaze(data)[0]
         scores = scores.view(-1, args.num_classes)
         pred = scores.data.max(1)[1]  # got the indices of the maximum, match them
-        correct += pred.eq(target.data).cpu().sum()
         print('Done with image {} out of {}...'.format(min(args.batch_size*(idx+1), len(val_loader.dataset)), len(val_loader.dataset)))
         pred_all   = np.append(pred_all, pred.cpu().numpy())
         target_all = np.append(target_all, target.cpu().numpy())
 
-    print("------------------------\nPredicted {} out of {}".format(correct, len(val_loader.dataset)))
-    val_accuracy = 100.0*float(correct)/len(val_loader.dataset)
+    val_accuracy = plot_confusion_matrix(target_all, pred_all, merged_activity_classes)
+    print("\n------------------------")
     print("Validation accuracy = {:.2f}%\n------------------------".format(val_accuracy))
     with open(os.path.join(args.output_dir, "logs.txt"), "a") as f:
-        f.write("\n------------------------\nPredicted {} out of {}\n".format(correct, len(val_loader.dataset)))
+        f.write("\n------------------------\n")
         f.write("Validation accuracy = {:.2f}%\n------------------------\n".format(val_accuracy))
 
     # now save the model if it has better accuracy than the best model seen so forward
     if val_accuracy > best_accuracy:
-        best_accuracy = val_accuracy
         # save the model
         torch.save(netGaze.state_dict(), os.path.join(args.output_dir, 'netGaze.pth'))
-        plot_confusion_matrix(target_all, pred_all, activity_classes)
+        best_accuracy = plot_confusion_matrix(target_all, pred_all, merged_activity_classes, args.output_dir)
 
     return val_accuracy
 
