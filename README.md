@@ -79,7 +79,7 @@ pipenv shell # activate virtual environment
 python infer.py --dataset-root-path=/path/to/lisat_gaze_data/ir_all_data/ --split=test --version=1_1 --snapshot-dir=/path/to/trained/models/directory/
 exit # exit virtual environment
 ```
-You can download our pre-trained (GPCycleGAN + gaze classifier) weights using [this link](https://drive.google.com/file/d/1FbYhyoSbCSo6l0b08a6kMPIgLwf7FHC-/view?usp=sharing).
+You can download our pre-trained (GPCycleGAN + gaze classifier) weights for both IR and RGB data using [this link](https://drive.google.com/file/d/1FbYhyoSbCSo6l0b08a6kMPIgLwf7FHC-/view?usp=sharing).
 
 Config files, logs, results and snapshots from running the above scripts will be stored in the `GPCycleGAN/experiments` folder by default.
 
