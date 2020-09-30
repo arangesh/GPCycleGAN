@@ -10,16 +10,33 @@ import numpy as np
 
 
 def gan2gaze(tensor, mean, std):
+    mean = mean[np.newaxis, ..., np.newaxis, np.newaxis] # (1, nc, 1, 1)
+    mean = np.tile(mean, (tensor.size()[0], 1, tensor.size()[2], tensor.size()[3])) # (B, nc, H, W)
+    mean = torch.from_numpy(mean.astype(np.float32)).cuda()
+    std = std[np.newaxis, ..., np.newaxis, np.newaxis] # (1, nc, 1, 1)
+    std = np.tile(std, (tensor.size()[0], 1, tensor.size()[2], tensor.size()[3])) # (B, nc, H, W)
+    std = torch.from_numpy(std.astype(np.float32)).cuda()
     return (tensor*0.5+0.5 - mean)/std
 
 def gaze2gan(tensor, mean, std):
+    mean = mean[np.newaxis, ..., np.newaxis, np.newaxis] # (1, nc, 1, 1)
+    mean = np.tile(mean, (tensor.size()[0], 1, tensor.size()[2], tensor.size()[3])) # (B, nc, H, W)
+    mean = torch.from_numpy(mean.astype(np.float32)).cuda()
+    std = std[np.newaxis, ..., np.newaxis, np.newaxis] # (1, nc, 1, 1)
+    std = np.tile(std, (tensor.size()[0], 1, tensor.size()[2], tensor.size()[3])) # (B, nc, H, W)
+    std = torch.from_numpy(std.astype(np.float32)).cuda()
     return (tensor*std+mean - 0.5)/0.5
 
 def tensor2image(tensor, mean, std):
-    image = 255.0*(std*tensor[0].cpu().float().numpy() + mean)
+    mean = mean[..., np.newaxis, np.newaxis] # (nc, 1, 1)
+    mean = np.tile(mean, (1, tensor.size()[2], tensor.size()[3])) # (nc, H, W)
+    std = std[..., np.newaxis, np.newaxis] # (nc, 1, 1)
+    std = np.tile(std, (1, tensor.size()[2], tensor.size()[3])) # (nc, H, W)
+
+    image = 255.0*(std*tensor[0].cpu().float().numpy() + mean) # (nc, H, W)
     if image.shape[0] == 1:
-        image = np.tile(image, (3,1,1))
-    return image.astype(np.uint8)
+        image = np.tile(image, (3, 1, 1))
+    return image.astype(np.uint8) # (3, H, W)
 
 class Logger():
     def __init__(self, n_epochs, batches_epoch, mean=0.0, std=1.0):

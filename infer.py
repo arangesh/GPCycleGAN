@@ -17,8 +17,8 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 
 from models import Generator, Discriminator, SqueezeNet
-from datasets import GANDataset, GazeDataset
-from utils import ReplayBuffer, LambdaLR, Logger, gan2gaze, gaze2gan
+from datasets import GazeDataset
+from utils import gan2gaze, gaze2gan
 
 
 parser = argparse.ArgumentParser('Options for running inference using GazeNet/GazeNet++ in PyTorch...')
@@ -32,7 +32,6 @@ parser.add_argument('--log-schedule', type=int, default=10, metavar='N', help='n
 parser.add_argument('--seed', type=int, default=1, help='set seed to some constant value to reproduce experiments')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='do not use cuda for training')
 parser.add_argument('--size', type=int, default=256, help='size of the data crop (squared assumed)')
-parser.add_argument('--nc', type=int, default=1, help='number of channels of data')
 
 
 args = parser.parse_args()
@@ -41,6 +40,14 @@ if args.dataset_root_path is None:
     assert False, 'Path to dataset not provided!'
 if all(args.version != x for x in ['1_0', '1_1']):
     assert False, 'Model version not recognized!'
+
+# determine if ir or rgb data
+if 'ir_' in args.dataset_root_path:
+    args.data_type = 'ir'
+    args.nc = 1
+else:
+    args.data_type = 'rgb'
+    args.nc = 3
 
 # Output class labels
 activity_classes = ['Eyes Closed', 'Forward', 'Shoulder', 'Left Mirror', 'Lap', 'Speedometer', 'Radio', 'Rearview', 'Right Mirror']
@@ -133,12 +140,12 @@ def test(netG_B2A, netGaze):
 
         # do the forward pass
         if netG_B2A is not None:
-            data = gaze2gan(data, test_loader.dataset.mean, test_loader.dataset.std)
+            data = gaze2gan(data, test_loader.dataset.mean[0:args.nc], test_loader.dataset.std[0:args.nc])
             fake_data = netG_B2A(data)
-            fake_data = gan2gaze(fake_data, test_loader.dataset.mean, test_loader.dataset.std)
-            scores = netGaze(fake_data.expand(-1, 3, -1, -1))[0]
+            fake_data = gan2gaze(fake_data, test_loader.dataset.mean[0:args.nc], test_loader.dataset.std[0:args.nc])
+            scores = netGaze(fake_data.repeat(1, int(3 / args.nc), 1, 1))[0]
         else:
-            scores = netGaze(data.expand(-1, 3, -1, -1))[0]
+            scores = netGaze(data.repeat(1, int(3 / args.nc), 1, 1))[0]
         scores = scores.view(-1, args.num_classes)
         pred = scores.data.max(1)[1]  # got the indices of the maximum, match them
         correct += pred.eq(target.data).cpu().sum()

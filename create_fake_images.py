@@ -29,7 +29,6 @@ parser.add_argument('--output-dir', type=str, default=None, help='output directo
 parser.add_argument('--snapshot-dir', type=str, default=None, help='directory with pre-trained model snapshots')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='do not use cuda for training')
 parser.add_argument('--size', type=int, default=256, help='size of the data crop (squared assumed)')
-parser.add_argument('--nc', type=int, default=1, help='number of channels of data')
 
 
 args = parser.parse_args()
@@ -37,11 +36,19 @@ args = parser.parse_args()
 if args.dataset_root_path is None:
     assert False, 'Path to dataset not provided!'
 
+# determine if ir or rgb data
+args.dataset_root_path = os.path.normpath(args.dataset_root_path)
+if 'ir_' in args.dataset_root_path:
+    args.data_type = 'ir'
+    args.nc = 1
+else:
+    args.data_type = 'rgb'
+    args.nc = 3
+
 # setup args
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 if args.output_dir is None:
-    args.output_dir = datetime.now().strftime("%Y-%m-%d-%H:%M")
-    args.output_dir = os.path.join('.', 'experiments', 'fake_images', args.output_dir)
+    args.output_dir = os.path.join(os.path.dirname(args.dataset_root_path), os.path.basename(args.dataset_root_path) + '_fake')
 
 if not os.path.exists(args.output_dir):
     os.makedirs(args.output_dir)
@@ -62,9 +69,11 @@ def infer(netG_B2A, im_path):
 
     # do the forward pass
     fake_data = netG_B2A(data)
-    fake_im = tensor2image(fake_data.detach(), 0.5, 0.5)
+    fake_im = tensor2image(fake_data.detach(), np.array([0.5 for _ in range(args.nc)], dtype='float32'), 
+        np.array([0.5 for _ in range(args.nc)], dtype='float32'))
     fake_im = np.transpose(fake_im, (1, 2, 0))
-    out_path = os.path.join(args.output_dir, im_path[len(args.dataset_root_path):])
+    fake_im = fake_im[:, :, ::-1]
+    out_path = os.path.join(args.output_dir, im_path[len(args.dataset_root_path) + 1:])
     cv2.imwrite(out_path, fake_im) 
     return 
 
@@ -83,7 +92,7 @@ if __name__ == '__main__':
     im_paths = sorted(glob.glob(os.path.join(args.dataset_root_path, '*', '*', '*.jpg')))
         
     for i, im_path in enumerate(im_paths):
-        (drive, tail) = os.path.split(im_path)
-        os.makedirs(os.path.join(args.output_dir, drive[len(args.dataset_root_path):]), exist_ok=True)
+        (head, tail) = os.path.split(im_path)
+        os.makedirs(os.path.join(args.output_dir, head[len(args.dataset_root_path) + 1:]), exist_ok=True)
         infer(netG_B2A, im_path)
         print("Done creating image %d/%d" % (i+1, len(im_paths)))

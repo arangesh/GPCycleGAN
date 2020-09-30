@@ -28,33 +28,55 @@ pipenv install https://download.pytorch.org/whl/cu100/torchvision-0.3.0-cp36-cp3
 python prepare_gaze_data.py --dataset-dir=/path/to/lisat_gaze_data
 ```
 
-## Training
+## Training (IR data)
 The prescribed three-step training procedure can be carried out as follows:
 ### Step 1: Train the gaze classifier on images without eyeglasses
 ```shell
 pipenv shell # activate virtual environment
-python gazenet.py --dataset-root-path=/path/to/lisat_gaze_data/ir_no_glasses/ --version=1_1 --snapshot=./weights/squeezenet1_1_imagenet.pth --random-transforms
+python gazenet.py --dataset-root-path=/path/to/lisat_gaze_data/ir_no_glasses/ --version=1_1 --snapshot=./weights/squeezenet1_1_rgb.pth --random-transforms
 ```
 ### Step 2: Train the GPCycleGAN model using the gaze classifier from Step 1
 ```shell
-python gpcyclegan.py --dataset-root-path=/path/to/lisat_gaze_data/ --version=1_1 --snapshot-dir=/path/to/trained/gaze-classifier/directory/ --random-transforms
+python gpcyclegan.py --dataset-root-path=/path/to/lisat_gaze_data/ --data-type=ir --version=1_1 --snapshot-dir=/path/to/trained/gaze-classifier/directory/ --random-transforms
 ```
 ### Step 3.1: Create fake images using the trained GPCycleGAN model
 ```shell
-python create_fake_images.py --dataset-root-path=/path/to/lisat_gaze_data/all_data/ --version=1_1 --snapshot-dir=/path/to/trained/gpcyclegan/directory/
-cp /path/to/lisat_gaze_data/all_data/mean_std.mat /path/to/fake_data/mean_std.mat # copy over dataset mean/std information to fake data folder
+python create_fake_images.py --dataset-root-path=/path/to/lisat_gaze_data/ir_all_data/ --snapshot-dir=/path/to/trained/gpcyclegan/directory/
+cp /path/to/lisat_gaze_data/ir_all_data/mean_std.mat /path/to/lisat_gaze_data/ir_all_data_fake/mean_std.mat # copy over dataset mean/std information to fake data folder
 ```
 ### Step 3.2: Finetune the gaze classifier on all fake images
 ```shell
-python gazenet-ft.py --dataset-root-path=/path/to/fake_data/ --version=1_1 --snapshot-dir=/path/to/trained/gaze-classifier/directory/ --random-transforms
+python gazenet-ft.py --dataset-root-path=/path/to/lisat_gaze_data/ir_all_data_fake/ --version=1_1 --snapshot-dir=/path/to/trained/gpcyclegan/directory/ --random-transforms
 exit # exit virtual environment
 ```
 
-## Inference
+## Training (RGB data)
+The prescribed three-step training procedure can be carried out as follows:
+### Step 1: Train the gaze classifier on images without eyeglasses
+```shell
+pipenv shell # activate virtual environment
+python gazenet.py --dataset-root-path=/path/to/lisat_gaze_data/rgb_no_glasses/ --version=1_1 --snapshot=./weights/squeezenet1_1_rgb.pth --random-transforms
+```
+### Step 2: Train the GPCycleGAN model using the gaze classifier from Step 1
+```shell
+python gpcyclegan.py --dataset-root-path=/path/to/lisat_gaze_data/ --data-type=rgb --version=1_1 --snapshot-dir=/path/to/trained/gaze-classifier/directory/ --random-transforms
+```
+### Step 3.1: Create fake images using the trained GPCycleGAN model
+```shell
+python create_fake_images.py --dataset-root-path=/path/to/lisat_gaze_data/rgb_all_data/ --snapshot-dir=/path/to/trained/gpcyclegan/directory/
+cp /path/to/lisat_gaze_data/rgb_all_data/mean_std.mat /path/to/lisat_gaze_data/rgb_all_data_fake/mean_std.mat # copy over dataset mean/std information to fake data folder
+```
+### Step 3.2: Finetune the gaze classifier on all fake images
+```shell
+python gazenet-ft.py --dataset-root-path=/path/to/lisat_gaze_data/rgb_all_data_fake/ --version=1_1 --snapshot-dir=/path/to/trained/gpcyclegan/directory/ --random-transforms
+exit # exit virtual environment
+```
+
+## Inference (IR data)
 Inference can be carried out using [this](https://github.com/arangesh/GPCycleGAN/blob/master/infer.py) script as follows:
 ```shell
 pipenv shell # activate virtual environment
-python infer.py --dataset-root-path=/path/to/lisat_gaze_data/all_data/ --split=test --version=1_1 --snapshot-dir=/path/to/trained/models/directory/
+python infer.py --dataset-root-path=/path/to/lisat_gaze_data/ir_all_data/ --split=test --version=1_1 --snapshot-dir=/path/to/trained/models/directory/
 exit # exit virtual environment
 ```
 You can download our pre-trained (GPCycleGAN + gaze classifier) weights using [this link](https://drive.google.com/file/d/1FbYhyoSbCSo6l0b08a6kMPIgLwf7FHC-/view?usp=sharing).

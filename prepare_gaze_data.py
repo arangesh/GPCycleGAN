@@ -8,7 +8,7 @@ def create_datasets(dataset_dir, use_symlinks=True):
     activity_classes = ['Eyes Closed', 'Forward', 'Shoulder', 'Left Mirror', 'Lap', 'Speedometer', 'Radio', 'Rearview', 'Right Mirror']
     splits = ['train', 'val', 'test']
     
-    # all data
+    # IR all data
     for split in splits:
         for activity in activity_classes:
             count = 0
@@ -22,7 +22,7 @@ def create_datasets(dataset_dir, use_symlinks=True):
                 count += 1
     print('Done creating ir_all_data dataset!')
 
-    # no glasses
+    # IR no glasses
     for split in splits:
         for activity in activity_classes:
             count = 0
@@ -36,7 +36,7 @@ def create_datasets(dataset_dir, use_symlinks=True):
                 count += 1
     print('Done creating ir_no_glasses dataset!')
 
-    # with glasses
+    # IR with glasses
     for split in splits:
         for activity in activity_classes:
             count = 0
@@ -50,7 +50,7 @@ def create_datasets(dataset_dir, use_symlinks=True):
                 count += 1
     print('Done creating ir_with_glasses dataset!')
 
-    # day
+    # IR day
     for split in splits:
         for activity in activity_classes:
             count = 0
@@ -64,7 +64,7 @@ def create_datasets(dataset_dir, use_symlinks=True):
                 count += 1
     print('Done creating ir_day dataset!')
 
-    # night
+    # IR night
     for split in splits:
         for activity in activity_classes:
             count = 0
@@ -77,6 +77,20 @@ def create_datasets(dataset_dir, use_symlinks=True):
                     shutil.copyfile(im, os.path.join(dataset_dir, 'ir_night', split, activity, '%.6d.jpg' % (count,)))
                 count += 1
     print('Done creating ir_night dataset!')
+
+    # RGB all data
+    for split in splits:
+        for activity in activity_classes:
+            count = 0
+            os.makedirs(os.path.join(dataset_dir, 'rgb_all_data', split, activity), exist_ok=True)
+            images = glob.glob(os.path.join(dataset_dir, 'rgb_*_*', split, activity, '*.jpg'))
+            for im in images:
+                if use_symlinks:
+                    os.symlink(im, os.path.join(dataset_dir, 'rgb_all_data', split, activity, '%.6d.jpg' % (count,)))
+                else:
+                    shutil.copyfile(im, os.path.join(dataset_dir, 'rgb_all_data', split, activity, '%.6d.jpg' % (count,)))
+                count += 1
+    print('Done creating rgb_all_data dataset!')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Prepare gaze dataset')

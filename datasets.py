@@ -75,16 +75,17 @@ class GANDataset(Dataset):
     def __init__(self, opt, a_datasets, b_datasets, random_transforms=True, unaligned=False):
         #self.mean = loadmat(os.path.join(opt.dataset_root_path, 'all_data', 'mean_std.mat'))['mean'][0, 0]
         #self.std = loadmat(os.path.join(opt.dataset_root_path, 'all_data', 'mean_std.mat'))['std'][0, 0]
-        self.mean, self.std = 0.5, 0.5
+        self.mean = np.array([0.5 for _ in range(opt.nc)], dtype='float32')
+        self.std = np.array([0.5 for _ in range(opt.nc)], dtype='float32')
         if random_transforms:
             transforms_ = [ transforms.Resize(int(opt.size*1.12), Image.BICUBIC), 
                 transforms.RandomCrop(opt.size), 
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
-                transforms.Normalize((self.mean,), (self.std,)) ]
+                transforms.Normalize(self.mean, self.std) ]
             self.transforms = transforms.Compose(transforms_)
         else:
-            self.transforms = transforms.Normalize((self.mean,), (self.std,))
+            self.transforms = transforms.Normalize(self.mean, self.std)
         self.unaligned = unaligned
 
         self.images_A, self.targets_A = [], []
@@ -123,10 +124,10 @@ class GazeDataset(Dataset):
         print('Preparing '+split+' dataset...')
         self.split = split
         
-        self.mean = loadmat(os.path.join(dataset_root_path, 'mean_std.mat'))['mean'][0, 0]
-        self.std = loadmat(os.path.join(dataset_root_path, 'mean_std.mat'))['std'][0, 0]
+        self.mean = loadmat(os.path.join(dataset_root_path, 'mean_std.mat'))['mean'][0]
+        self.std = loadmat(os.path.join(dataset_root_path, 'mean_std.mat'))['std'][0]
         self.prepare_input = transforms.Compose([transforms.Resize(256), transforms.ToTensor()]) # ToTensor() normalizes image to [0, 1]
-        self.normalize = transforms.Normalize((self.mean, self.mean, self.mean), (self.std, self.std, self.std))
+        self.normalize = transforms.Normalize(self.mean, self.std)
         if random_transforms:
             self.transforms = transforms.Compose([transforms.Resize(286),
                 transforms.RandomRotation((-10, 10)), 
@@ -145,7 +146,7 @@ class GazeDataset(Dataset):
     def __getitem__(self, index):
         'Generates one sample of data'
         y = self.labels[index]
-        im = Image.fromarray(cv2.imread(self.images[index])) #cv2 loads 3 channel image by default
+        im = Image.fromarray(cv2.cvtColor(cv2.imread(self.images[index]), cv2.COLOR_BGR2RGB)) #cv2 loads 3 channel image by default
 
         if self.transforms is None:
             X = self.normalize(self.prepare_input(im))

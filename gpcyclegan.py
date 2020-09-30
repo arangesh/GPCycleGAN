@@ -20,8 +20,9 @@ from datasets import GANDataset, GazeDataset
 from utils import ReplayBuffer, LambdaLR, Logger, gan2gaze, gaze2gan
 
 
-parser = argparse.ArgumentParser('Options for training GazeNet+ in PyTorch...')
+parser = argparse.ArgumentParser('Options for training GPCycleGAN in PyTorch...')
 parser.add_argument('--dataset-root-path', type=str, default=None, help='path to dataset')
+parser.add_argument('--data-type', type=str, default='ir', help='which data type to load (ir/rgb)')
 parser.add_argument('--version', type=str, default=None, help='which version of SqueezeNet to load (1_0/1_1)')
 parser.add_argument('--output-dir', type=str, default=None, help='output directory for model and logs')
 parser.add_argument('--snapshot-dir', type=str, default=None, help='directory with pre-trained model snapshots')
@@ -34,7 +35,6 @@ parser.add_argument('--no-cuda', action='store_true', default=False, help='do no
 parser.add_argument('--random-transforms', action='store_true', default=False, help='apply random transforms to input while training')
 parser.add_argument('--decay-epoch', type=int, default=100, help='epoch to start linearly decaying the learning rate to 0')
 parser.add_argument('--size', type=int, default=256, help='size of the data crop (squared assumed)')
-parser.add_argument('--nc', type=int, default=1, help='number of channels of data')
 parser.add_argument('--train-gaze', action='store_true', default=False, help='train GazeNet simultaneously')
 
 
@@ -42,6 +42,12 @@ args = parser.parse_args()
 # check args
 if args.dataset_root_path is None:
     assert False, 'Path to dataset not provided!'
+if args.data_type == 'ir':
+    args.nc = 1
+elif args.data_type == 'rgb':
+    args.nc = 3
+else:
+    assert False, 'Incorrect data type specified!'
 if all(args.version != x for x in ['1_0', '1_1']):
     assert False, 'Model version not recognized!'
 
@@ -53,7 +59,7 @@ args.num_classes = len(activity_classes)
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 if args.output_dir is None:
     args.output_dir = datetime.now().strftime("%Y-%m-%d-%H:%M")
-    args.output_dir = os.path.join('.', 'experiments', 'gazenet+', args.output_dir)
+    args.output_dir = os.path.join('.', 'experiments', 'gpcyclegan', args.output_dir)
 
 if not os.path.exists(args.output_dir):
     os.makedirs(args.output_dir)
@@ -117,8 +123,8 @@ def plot_confusion_matrix(y_true, y_pred, classes, normalize=True, title=None, c
 
 
 kwargs = {'batch_size': args.batch_size, 'shuffle': True, 'num_workers': 6}
-train_loader = torch.utils.data.DataLoader(GANDataset(args, ['no_glasses'], ['with_glasses'], random_transforms=args.random_transforms, unaligned=True), **kwargs)
-val_loader = torch.utils.data.DataLoader(GazeDataset(os.path.join(args.dataset_root_path, 'all_data'), 'val', False), **kwargs)
+train_loader = torch.utils.data.DataLoader(GANDataset(args, [args.data_type + '_no_glasses'], [args.data_type + '_with_glasses'], random_transforms=args.random_transforms, unaligned=True), **kwargs)
+val_loader = torch.utils.data.DataLoader(GazeDataset(os.path.join(args.dataset_root_path, args.data_type + '_all_data'), 'val', False), **kwargs)
 
 # global var to store best validation accuracy across all epochs
 best_accuracy = 0.0
@@ -170,17 +176,17 @@ def train(netG_A2B, netG_B2A, netD_A, netD_B, netGaze, epoch):
         loss_cycle_BAB = criterion_cycle(recovered_B, real_B)*10.0
         
         # Gaze consistency loss
-        real_A_gaze = gan2gaze(real_A.expand(-1, 3, -1, -1), val_loader.dataset.mean, val_loader.dataset.std)
-        _, masks_real_A = netGaze(real_A_gaze)
-        recovered_A_gaze = gan2gaze(recovered_A.expand(-1, 3, -1, -1), val_loader.dataset.mean, val_loader.dataset.std)
-        _, masks_rec_A = netGaze(recovered_A_gaze)
+        real_A_gaze = gan2gaze(real_A, val_loader.dataset.mean[0:args.nc], val_loader.dataset.std[0:args.nc])
+        _, masks_real_A = netGaze(real_A_gaze.repeat(1, int(3 / args.nc), 1, 1))
+        recovered_A_gaze = gan2gaze(recovered_A, val_loader.dataset.mean[0:args.nc], val_loader.dataset.std[0:args.nc])
+        _, masks_rec_A = netGaze(recovered_A_gaze.repeat(1, int(3 / args.nc), 1, 1))
         loss_gaze = criterion_gaze(masks_real_A, masks_rec_A)*10.0
 
         # compute the train accuracy of (netB2A-->netGaze) model
-        same_A_gaze = gan2gaze(same_A.expand(-1, 3, -1, -1), val_loader.dataset.mean, val_loader.dataset.std)
-        scores_same_A, _ = netGaze(same_A_gaze)
-        fake_A_gaze = gan2gaze(fake_A.expand(-1, 3, -1, -1), val_loader.dataset.mean, val_loader.dataset.std)
-        scores_fake_A, _ = netGaze(fake_A_gaze)
+        same_A_gaze = gan2gaze(same_A, val_loader.dataset.mean[0:args.nc], val_loader.dataset.std[0:args.nc])
+        scores_same_A, _ = netGaze(same_A_gaze.repeat(1, int(3 / args.nc), 1, 1))
+        fake_A_gaze = gan2gaze(fake_A, val_loader.dataset.mean[0:args.nc], val_loader.dataset.std[0:args.nc])
+        scores_fake_A, _ = netGaze(fake_A_gaze.repeat(1, int(3 / args.nc), 1, 1))
 
         scores_same_A = scores_same_A.view(-1, args.num_classes)
         pred = scores_same_A.data.max(1)[1]  # get the index of the max log-probability
@@ -285,10 +291,10 @@ def val(netG_A2B, netG_B2A, netD_A, netD_B, netGaze):
         data, target = Variable(data[:, :args.nc, :, :]), Variable(target)
 
         # do the forward pass
-        data = gaze2gan(data, val_loader.dataset.mean, val_loader.dataset.std)
+        data = gaze2gan(data, val_loader.dataset.mean[0:args.nc], val_loader.dataset.std[0:args.nc])
         fake_data = netG_B2A(data)
-        fake_data = gan2gaze(fake_data, val_loader.dataset.mean, val_loader.dataset.std)
-        scores = netGaze(fake_data.expand(-1, 3, -1, -1))[0]
+        fake_data = gan2gaze(fake_data, val_loader.dataset.mean[0:args.nc], val_loader.dataset.std[0:args.nc])
+        scores = netGaze(fake_data.repeat(1, int(3 / args.nc), 1, 1))[0]
         scores = scores.view(-1, args.num_classes)
         pred = scores.data.max(1)[1]  # got the indices of the maximum, match them
         correct += pred.eq(target.data).cpu().sum()

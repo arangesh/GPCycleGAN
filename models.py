@@ -149,7 +149,7 @@ class SqueezeNet(nn.Module):
                 Fire(512, 64, 256, 256))
             # Final convolution is initialized differently from the rest
             final_conv = nn.Conv2d(512, self.num_classes, kernel_size=1)
-            self.masks = nn.Sequential(
+            self.cams = nn.Sequential(
                 nn.Dropout(p=0.5),
                 final_conv)
             self.attention = nn.Sigmoid()
@@ -174,7 +174,7 @@ class SqueezeNet(nn.Module):
                 Fire(512, 64, 256, 256))
             # Final convolution is initialized differently from the rest
             final_conv = nn.Conv2d(512, self.num_classes, kernel_size=1)
-            self.masks = nn.Sequential(
+            self.cams = nn.Sequential(
                 nn.Dropout(p=0.5),
                 final_conv)
             self.attention = nn.Sigmoid()
@@ -197,7 +197,7 @@ class SqueezeNet(nn.Module):
 
     def forward(self, x):
         x = self.features(x)
-        x = self.masks(x)
+        x = self.cams(x)
         masks = self.attention(x)
         x = self.head(x)
         return x, masks

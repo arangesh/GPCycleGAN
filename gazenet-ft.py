@@ -32,7 +32,6 @@ parser.add_argument('--log-schedule', type=int, default=10, metavar='N', help='n
 parser.add_argument('--seed', type=int, default=1, help='set seed to some constant value to reproduce experiments')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='do not use cuda for training')
 parser.add_argument('--size', type=int, default=256, help='size of the data crop (squared assumed)')
-parser.add_argument('--nc', type=int, default=1, help='number of channels of data')
 parser.add_argument('--random-transforms', action='store_true', default=False, help='apply random transforms to input while training')
 
 
@@ -42,6 +41,14 @@ if args.dataset_root_path is None:
     assert False, 'Path to dataset not provided!'
 if all(args.version != x for x in ['1_0', '1_1']):
     assert False, 'Model version not recognized!'
+
+# determine if ir or rgb data
+if 'ir_' in args.dataset_root_path:
+    args.data_type = 'ir'
+    args.nc = 1
+else:
+    args.data_type = 'rgb'
+    args.nc = 3
 
 # Output class labels
 activity_classes = ['Eyes Closed', 'Forward', 'Shoulder', 'Left Mirror', 'Lap', 'Speedometer', 'Radio', 'Rearview', 'Right Mirror']
