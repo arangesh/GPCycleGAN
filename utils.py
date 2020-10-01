@@ -203,4 +203,5 @@ def plot_confusion_matrix(y_true, y_pred, classes, output_dir=None, normalize=Tr
     fig.tight_layout()
     if output_dir is not None:
         fig.savefig(os.path.join(output_dir, 'confusion_matrix.jpg'))
+    plt.close(fig)
     return 100.0*accuracy_score(y_true, y_pred)
