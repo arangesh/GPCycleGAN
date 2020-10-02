@@ -7,7 +7,9 @@ import itertools
 
 import numpy as np
 from scipy.io import savemat
-import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
 
 import torch
 import torch.optim as optim
