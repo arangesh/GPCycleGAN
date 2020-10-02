@@ -4,12 +4,12 @@ import datetime
 import os
 import sys
 
+import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix, accuracy_score
 from sklearn.utils.multiclass import unique_labels
-import numpy as np
 from visdom import Visdom
 
 from torch.autograd import Variable
