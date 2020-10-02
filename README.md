@@ -21,7 +21,7 @@ pipenv install https://download.pytorch.org/whl/cu100/torchvision-0.3.0-cp36-cp3
 ```
 
 ## Dataset
-1) Download the complete IR dataset for driver gaze classification using [this link](https://drive.google.com/file/d/1iJTlVytGsmQu9EeB1Iw1-cYwPlOx4-XW/view?usp=sharing).
+1) Download the complete IR+RGB dataset for driver gaze classification using [this link](https://drive.google.com/file/d/1iJTlVytGsmQu9EeB1Iw1-cYwPlOx4-XW/view?usp=sharing).
 2) Unzip the file.
 3) Prepare the train, val and test splits as follows:
 ```shell
