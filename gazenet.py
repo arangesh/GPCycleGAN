@@ -5,7 +5,9 @@ from statistics import mean
 import argparse
 
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
 
 import torch
 import torch.optim as optim
