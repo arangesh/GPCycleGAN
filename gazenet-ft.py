@@ -4,8 +4,11 @@ from datetime import datetime
 from statistics import mean
 import argparse
 
+
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
 import numpy as np
-import matplotlib.pyplot as plt
 
 import torch
 import torch.optim as optim
