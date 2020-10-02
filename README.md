@@ -88,7 +88,7 @@ python infer.py --dataset-root-path=/path/to/lisat_gaze_data/rgb_all_data/ --spl
 exit # exit virtual environment
 ```
 
-### Pre-trained Weights
+## Pre-trained Weights
 You can download our pre-trained (GPCycleGAN + gaze classifier) weights for both IR and RGB data using [this link](https://drive.google.com/file/d/1FbYhyoSbCSo6l0b08a6kMPIgLwf7FHC-/view?usp=sharing).
 
 Config files, logs, results and snapshots from running the above scripts will be stored in the `GPCycleGAN/experiments` folder by default.
