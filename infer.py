@@ -105,14 +105,16 @@ def test(netG_B2A, netGaze):
         pred_all   = np.append(pred_all, pred.cpu().numpy())
         target_all = np.append(target_all, target.cpu().numpy())
 
-    test_accuracy =  plot_confusion_matrix(target_all, pred_all, merged_activity_classes, args.output_dir)
+    micro_acc, macro_acc =  plot_confusion_matrix(target_all, pred_all, merged_activity_classes, args.output_dir)
     print("\n------------------------")
-    print("Test accuracy = {:.2f}%\n------------------------".format(test_accuracy))
+    print("Micro-average accuracy = {:.2f}%".format(micro_acc))
+    print("Macro-average accuracy = {:.2f}%\n------------------------".format(macro_acc))
     with open(os.path.join(args.output_dir, "logs.txt"), "a") as f:
         f.write("\n------------------------\n")
-        f.write("Test accuracy = {:.2f}%\n------------------------\n".format(test_accuracy))
+        f.write("Micro-average accuracy = {:.2f}%\n".format(micro_acc))
+        f.write("Micro-average accuracy = {:.2f}%\n------------------------\n".format(macro_acc))
 
-    return test_accuracy
+    return micro_acc, macro_acc
 
 
 if __name__ == '__main__':
@@ -134,7 +136,7 @@ if __name__ == '__main__':
     else:
         assert False, 'No model snapshot provided!'
 
-    test_acc = test(netG_B2A, netGaze)
-    savemat(os.path.join(args.output_dir, 'accuracy.mat'), {'acc': test_acc})
+    micro_acc, macro_acc = test(netG_B2A, netGaze)
+    savemat(os.path.join(args.output_dir, 'accuracy.mat'), {'micro_acc': micro_acc, 'macro_acc': macro_acc})
 
     plt.close('all')

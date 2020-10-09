@@ -144,7 +144,7 @@ def val(netGaze):
         pred_all   = np.append(pred_all, pred.cpu().numpy())
         target_all = np.append(target_all, target.cpu().numpy())
 
-    val_accuracy = plot_confusion_matrix(target_all, pred_all, merged_activity_classes)
+    val_accuracy, _ = plot_confusion_matrix(target_all, pred_all, merged_activity_classes)
     print("\n------------------------")
     print("Validation accuracy = {:.2f}%\n------------------------".format(val_accuracy))
     with open(os.path.join(args.output_dir, "logs.txt"), "a") as f:
@@ -155,7 +155,7 @@ def val(netGaze):
     if val_accuracy > best_accuracy:
         # save the model
         torch.save(netGaze.state_dict(), os.path.join(args.output_dir, 'netGaze.pth'))
-        best_accuracy = plot_confusion_matrix(target_all, pred_all, merged_activity_classes, args.output_dir)
+        best_accuracy, _ = plot_confusion_matrix(target_all, pred_all, merged_activity_classes, args.output_dir)
 
     return val_accuracy
 

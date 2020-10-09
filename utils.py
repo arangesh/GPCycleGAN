@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
-from sklearn.metrics import confusion_matrix, accuracy_score
+from sklearn.metrics import confusion_matrix, accuracy_score, balanced_accuracy_score
 from sklearn.utils.multiclass import unique_labels
 from visdom import Visdom
 
@@ -206,4 +206,4 @@ def plot_confusion_matrix(y_true, y_pred, classes, output_dir=None, normalize=Tr
     if output_dir is not None:
         fig.savefig(os.path.join(output_dir, 'confusion_matrix.jpg'))
     plt.close(fig)
-    return 100.0*accuracy_score(y_true, y_pred)
+    return 100.0*accuracy_score(y_true, y_pred), 100.0*balanced_accuracy_score(y_true, y_pred)
