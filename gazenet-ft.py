@@ -87,8 +87,7 @@ best_accuracy = 0.0
 # training function
 def train(netGaze, epoch):
     epoch_loss = list()
-    pred_all = np.array([], dtype='int64')
-    target_all = np.array([], dtype='int64')
+    correct = 0
     netGaze.train()
     for b_idx, (data, targets) in enumerate(train_loader):
         if args.cuda:
@@ -105,8 +104,7 @@ def train(netGaze, epoch):
 
         # compute the accuracy
         pred = scores.data.max(1)[1]  # get the index of the max log-probability
-        pred_all   = np.append(pred_all, pred.cpu().numpy())
-        target_all = np.append(target_all, targets.cpu().numpy())
+        correct += pred.eq(targets.data).cpu().sum()
 
         epoch_loss.append(loss.item())
         loss.backward()
@@ -127,7 +125,7 @@ def train(netGaze, epoch):
     with open(os.path.join(args.output_dir, "logs.txt"), "a") as f:
         f.write("\n------------------------\nAverage loss for epoch = {:.2f}\n".format(avg_loss))
 
-    train_accuracy =  100.0*accuracy_score(target_all, pred_all)
+    train_accuracy =  100.0*float(correct)/float(len(train_loader.dataset))
     print("Accuracy for epoch = {:.2f}%\n------------------------".format(train_accuracy))
     with open(os.path.join(args.output_dir, "logs.txt"), "a") as f:
         f.write("Accuracy for epoch = {:.2f}%\n------------------------\n".format(train_accuracy))
