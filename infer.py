@@ -10,6 +10,7 @@ from scipy.io import savemat
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
+import cv2
 
 import torch
 import torch.optim as optim
@@ -18,7 +19,8 @@ import torch.nn.functional as F
 
 from models import Generator, Discriminator, SqueezeNet
 from datasets import GazeDataset
-from utils import gan2gaze, gaze2gan, plot_confusion_matrix
+from utils import gan2gaze, gaze2gan, tensor2image, plot_confusion_matrix
+from visualize import create_viz
 
 
 parser = argparse.ArgumentParser('Options for running inference using GazeNet/GazeNet++ in PyTorch...')
@@ -32,6 +34,7 @@ parser.add_argument('--log-schedule', type=int, default=10, metavar='N', help='n
 parser.add_argument('--seed', type=int, default=1, help='set seed to some constant value to reproduce experiments')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='do not use cuda for training')
 parser.add_argument('--size', type=int, default=256, help='size of the data crop (squared assumed)')
+parser.add_argument('--save-viz', action='store_true', default=False, help='save visualization depicting intermediate images and network outputs')
 
 
 args = parser.parse_args()
@@ -61,7 +64,10 @@ if args.output_dir is None:
     args.output_dir = os.path.join('.', 'experiments', 'inference', args.output_dir)
 
 if not os.path.exists(args.output_dir):
-    os.makedirs(args.output_dir)
+    if args.save_viz:
+        os.makedirs(os.path.join(args.output_dir, 'images'))
+    else:
+        os.makedirs(args.output_dir)
 else:
     assert False, 'Output directory already exists!'
 
@@ -85,6 +91,7 @@ def test(netG_B2A, netGaze):
     netGaze.eval()
     pred_all = np.array([], dtype='int64')
     target_all = np.array([], dtype='int64')
+    count = 0
     
     for idx, (data, target) in enumerate(test_loader):
         if args.cuda:
@@ -96,9 +103,27 @@ def test(netG_B2A, netGaze):
             data = gaze2gan(data, test_loader.dataset.mean[0:args.nc], test_loader.dataset.std[0:args.nc])
             fake_data = netG_B2A(data)
             fake_data = gan2gaze(fake_data, test_loader.dataset.mean[0:args.nc], test_loader.dataset.std[0:args.nc])
-            scores = netGaze(fake_data.repeat(1, int(3 / args.nc), 1, 1))[0]
+            scores, masks = netGaze(fake_data.repeat(1, int(3 / args.nc), 1, 1))
         else:
-            scores = netGaze(data.repeat(1, int(3 / args.nc), 1, 1))[0]
+            data = gaze2gan(data, test_loader.dataset.mean[0:args.nc], test_loader.dataset.std[0:args.nc])
+            fake_data = gan2gaze(data, test_loader.dataset.mean[0:args.nc], test_loader.dataset.std[0:args.nc])
+            scores, masks = netGaze(fake_data.repeat(1, int(3 / args.nc), 1, 1))
+
+        if args.save_viz:
+            im = tensor2image(data.repeat(1, int(3 / args.nc), 1, 1).detach(), np.array([0.5 for _ in range(args.nc)], 
+                dtype='float32'), np.array([0.5 for _ in range(args.nc)], dtype='float32'))
+            im = np.transpose(im, (1, 2, 0))
+            im = im[:, :, ::-1]
+            im_wo = tensor2image(fake_data.repeat(1, int(3 / args.nc), 1, 1).detach(), 
+                test_loader.dataset.mean, test_loader.dataset.std)
+            im_wo = np.transpose(im_wo, (1, 2, 0))
+            im_wo = im_wo[:, :, ::-1]
+            im_out = create_viz(im, im_wo, scores, masks, activity_classes)
+
+            out_path = os.path.join(args.output_dir, 'images', '%.6d.jpg' % (count,))
+            cv2.imwrite(out_path, im_out)
+            count += 1
+
         scores = scores.view(-1, args.num_classes)
         pred = scores.data.max(1)[1]  # got the indices of the maximum, match them
         print('Done with image {} out {}...'.format(min(args.batch_size*(idx+1), len(test_loader.dataset)), len(test_loader.dataset)))
