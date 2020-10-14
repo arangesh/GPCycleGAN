@@ -24,10 +24,9 @@ parser.add_argument('--dataset-root-path', type=str, default=None, help='path to
 parser.add_argument('--version', type=str, default=None, help='which version of SqueezeNet to load (1_0/1_1)')
 parser.add_argument('--output-dir', type=str, default=None, help='output directory for model and logs')
 parser.add_argument('--snapshot', type=str, default=None, help='path to pre-trained model snapshot')
-parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='batch size for training')
+parser.add_argument('--batch-size', type=int, default=32, metavar='N', help='batch size for training')
 parser.add_argument('--epochs', type=int, default=50, metavar='N', help='number of epochs to train for')
-parser.add_argument('--learning-rate', type=float, default=0.0005, metavar='LR', help='learning rate')
-parser.add_argument('--momentum', type=float, default=0.9, metavar='M', help='momentum for gradient step')
+parser.add_argument('--learning-rate', type=float, default=4e-4, metavar='LR', help='learning rate')
 parser.add_argument('--weight-decay', type=float, default=0.0005, metavar='WD', help='weight decay')
 parser.add_argument('--log-schedule', type=int, default=10, metavar='N', help='number of iterations to print/save log after')
 parser.add_argument('--seed', type=int, default=1, help='set seed to some constant value to reproduce experiments')
@@ -45,6 +44,8 @@ if all(args.version != x for x in ['1_0', '1_1']):
 # Output class labels
 activity_classes = ['Eyes Closed', 'Forward', 'Shoulder', 'Left Mirror', 'Lap', 'Speedometer', 'Radio', 'Rearview', 'Right Mirror']
 merged_activity_classes = ['Eyes Closed/Lap', 'Forward', 'Left Mirror', 'Speedometer', 'Radio', 'Rearview', 'Right Mirror']
+#activity_classes = ['Eyes Closed', 'Forward', 'Left', 'Speedometer', 'Radio', 'Rearview', 'Right']
+#merged_activity_classes = ['Eyes Closed', 'Forward', 'Left', 'Speedometer', 'Radio', 'Rearview', 'Right']
 args.num_classes = len(activity_classes)
 
 # setup args
@@ -68,8 +69,8 @@ if args.cuda:
 
 
 kwargs = {'batch_size': args.batch_size, 'shuffle': True, 'num_workers': 6}
-train_loader = torch.utils.data.DataLoader(GazeDataset(args.dataset_root_path, 'train', args.random_transforms), **kwargs)
-val_loader = torch.utils.data.DataLoader(GazeDataset(args.dataset_root_path, 'val', False), **kwargs)
+train_loader = torch.utils.data.DataLoader(GazeDataset(args.dataset_root_path, activity_classes, 'train', args.random_transforms), **kwargs)
+val_loader = torch.utils.data.DataLoader(GazeDataset(args.dataset_root_path, activity_classes, 'val', False), **kwargs)
 
 # global var to store best validation accuracy across all epochs
 best_accuracy = 0.0
@@ -162,7 +163,7 @@ def val(netGaze):
 
 if __name__ == '__main__':
     # get the model, load pretrained weights, and convert it into cuda for if necessary
-    netGaze = SqueezeNet(args.version)
+    netGaze = SqueezeNet(args.version, num_classes=args.num_classes)
 
     if args.snapshot is not None:
         netGaze.load_state_dict(torch.load(args.snapshot), strict=False)
@@ -171,7 +172,7 @@ if __name__ == '__main__':
         netGaze.cuda()
 
     # create a temporary optimizer
-    optimizer = optim.SGD(netGaze.parameters(), lr=args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
+    optimizer = optim.Adam(netGaze.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
 
     fig1, ax1 = plt.subplots()
     plt.grid(True)

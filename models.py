@@ -151,10 +151,9 @@ class SqueezeNet(nn.Module):
             final_conv = nn.Conv2d(512, self.num_classes, kernel_size=1)
             self.cams = nn.Sequential(
                 nn.Dropout(p=0.5),
-                final_conv)
-            self.attention = nn.Sigmoid()
-            self.head = nn.Sequential(
-                nn.ReLU(inplace=True),
+                final_conv,
+                nn.ReLU(inplace=True))
+            self.classifier = nn.Sequential(
                 nn.AdaptiveAvgPool2d((1, 1)),
                 nn.LogSoftmax(dim=1))
         elif version == '1_1':
@@ -176,10 +175,9 @@ class SqueezeNet(nn.Module):
             final_conv = nn.Conv2d(512, self.num_classes, kernel_size=1)
             self.cams = nn.Sequential(
                 nn.Dropout(p=0.5),
-                final_conv)
-            self.attention = nn.Sigmoid()
-            self.head = nn.Sequential(
-                nn.ReLU(inplace=True),
+                final_conv,
+                nn.ReLU(inplace=True))
+            self.classifier = nn.Sequential(
                 nn.AdaptiveAvgPool2d((1, 1)),
                 nn.LogSoftmax(dim=1))
         else:
@@ -197,7 +195,6 @@ class SqueezeNet(nn.Module):
 
     def forward(self, x):
         x = self.features(x)
-        x = self.cams(x)
-        masks = self.attention(x)
-        x = self.head(x)
+        masks = self.cams(x)
+        x = self.classifier(masks)
         return x, masks

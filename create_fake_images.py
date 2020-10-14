@@ -28,7 +28,7 @@ parser.add_argument('--dataset-root-path', type=str, default=None, help='path to
 parser.add_argument('--output-dir', type=str, default=None, help='output directory for model and logs')
 parser.add_argument('--snapshot-dir', type=str, default=None, help='directory with pre-trained model snapshots')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='do not use cuda for training')
-parser.add_argument('--size', type=int, default=256, help='size of the data crop (squared assumed)')
+parser.add_argument('--size', type=int, default=224, help='size of the data crop (squared assumed)')
 
 
 args = parser.parse_args()

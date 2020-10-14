@@ -26,13 +26,11 @@ parser.add_argument('--output-dir', type=str, default=None, help='output directo
 parser.add_argument('--snapshot-dir', type=str, default=None, help='directory with pre-trained model snapshots')
 parser.add_argument('--batch-size', type=int, default=32, metavar='N', help='batch size for training')
 parser.add_argument('--epochs', type=int, default=50, metavar='N', help='number of epochs to train for')
-parser.add_argument('--learning-rate', type=float, default=0.0001, metavar='LR', help='learning rate')
-parser.add_argument('--momentum', type=float, default=0.9, metavar='M', help='momentum for gradient step')
+parser.add_argument('--learning-rate', type=float, default=1e-4, metavar='LR', help='learning rate')
 parser.add_argument('--weight-decay', type=float, default=0.0005, metavar='WD', help='weight decay')
 parser.add_argument('--log-schedule', type=int, default=10, metavar='N', help='number of iterations to print/save log after')
 parser.add_argument('--seed', type=int, default=1, help='set seed to some constant value to reproduce experiments')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='do not use cuda for training')
-parser.add_argument('--size', type=int, default=256, help='size of the data crop (squared assumed)')
 parser.add_argument('--random-transforms', action='store_true', default=False, help='apply random transforms to input while training')
 
 
@@ -77,8 +75,8 @@ if args.cuda:
 
 
 kwargs = {'batch_size': args.batch_size, 'shuffle': True, 'num_workers': 6}
-train_loader = torch.utils.data.DataLoader(GazeDataset(args.dataset_root_path, 'train', args.random_transforms), **kwargs)
-val_loader = torch.utils.data.DataLoader(GazeDataset(args.dataset_root_path, 'val', False), **kwargs)
+train_loader = torch.utils.data.DataLoader(GazeDataset(args.dataset_root_path, activity_classes, 'train', args.random_transforms), **kwargs)
+val_loader = torch.utils.data.DataLoader(GazeDataset(args.dataset_root_path, activity_classes, 'val', False), **kwargs)
 
 # global var to store best validation accuracy across all epochs
 best_accuracy = 0.0
@@ -172,7 +170,7 @@ def val(netGaze, netG_B2A):
 
 if __name__ == '__main__':
     # get the model, load pretrained weights, and convert it into cuda for if necessary
-    netGaze = SqueezeNet(args.version)
+    netGaze = SqueezeNet(args.version, num_classes=args.num_classes)
     netG_B2A = Generator(args.nc, args.nc)
 
     if args.snapshot_dir is not None:
@@ -186,7 +184,7 @@ if __name__ == '__main__':
         netGaze.cuda()
 
     # create a temporary optimizer
-    optimizer = optim.SGD(netGaze.parameters(), lr=args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
+    optimizer = optim.Adam(netGaze.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
 
     fig1, ax1 = plt.subplots()
     plt.grid(True)

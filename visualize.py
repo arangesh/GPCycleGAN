@@ -1,25 +1,26 @@
 from math import ceil
 
-import torch
 import numpy as np
 import cv2
 
+import torch
+
 
 def mark_image(im):
-    im[:10, :, 0] = 0
-    im[:10, :, 1] = 255
-    im[:10, :, 2] = 0
-    im[-10:, :, 0] = 0
-    im[-10:, :, 1] = 255
-    im[-10:, :, 2] = 0
-    im[:, :10, 0] = 0
-    im[:, :10, 1] = 255
-    im[:, :10, 2] = 0
-    im[:, -10:, 0] = 0
-    im[:, -10:, 1] = 255
-    im[:, -10:, 2] = 0
+    thickness = 5
+    im[:thickness, :, 0] = 255
+    im[:thickness, :, 1] = 255
+    im[:thickness, :, 2] = 255
+    im[-thickness:, :, 0] = 255
+    im[-thickness:, :, 1] = 255
+    im[-thickness:, :, 2] = 255
+    im[:, :thickness, 0] = 255
+    im[:, :thickness, 1] = 255
+    im[:, :thickness, 2] = 255
+    im[:, -thickness:, 0] = 255
+    im[:, -thickness:, 1] = 255
+    im[:, -thickness:, 2] = 255
     return im
-
 
 def create_viz(im, im_wo, scores, masks, activity_classes):
     if im_wo is None:
@@ -31,10 +32,13 @@ def create_viz(im, im_wo, scores, masks, activity_classes):
     scores = scores.view(-1, num_classes)
     pred = scores.data.max(1)[1].item()
 
-    mask_shape = (ceil(im.shape[1] / num_classes), ceil(im.shape[1] / num_classes))
+    mask_shape = (ceil(im.shape[1] / num_classes), ceil(im.shape[1] / num_classes)) # size of each heatmap in visualization
+    masks_min, masks_max = torch.min(masks), torch.max(masks)
+    masks = (masks - masks_min) / (masks_max - masks_min) # normalize masks to [0, 1]
     hms = []
     for cl in range(num_classes):
-        hm = 255*cv2.resize(masks[0, cl, :, :].view(15, 15).detach().cpu().numpy(), mask_shape)
+        hm = masks[0, cl, :, :].detach().cpu().numpy()
+        hm = 255*cv2.resize(hm, mask_shape)
         hm = cv2.applyColorMap(hm.astype(np.uint8), cv2.COLORMAP_JET)
         if pred == cl:
             hm = mark_image(hm)
@@ -42,7 +46,10 @@ def create_viz(im, im_wo, scores, masks, activity_classes):
 
     hms = np.hstack(hms)
     excess = hms.shape[1] - im.shape[1]
-    im_out = np.vstack((im, hms[:, :-excess, :]))
+    if excess != 0:
+        im_out = np.vstack((im, hms[:, :-excess, :]))
+    else:
+        im_out = np.vstack((im, hms))
     im_out = im_out.astype(np.uint8)
 
     cv2.putText(im_out, 'Original Image', (int(im_out.shape[1] / 4 - 50), 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 5)

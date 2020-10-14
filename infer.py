@@ -33,7 +33,6 @@ parser.add_argument('--batch-size', type=int, default=1, metavar='N', help='batc
 parser.add_argument('--log-schedule', type=int, default=10, metavar='N', help='number of iterations to print/save log after')
 parser.add_argument('--seed', type=int, default=1, help='set seed to some constant value to reproduce experiments')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='do not use cuda for training')
-parser.add_argument('--size', type=int, default=256, help='size of the data crop (squared assumed)')
 parser.add_argument('--save-viz', action='store_true', default=False, help='save visualization depicting intermediate images and network outputs')
 
 
@@ -55,6 +54,8 @@ else:
 # Output class labels
 activity_classes = ['Eyes Closed', 'Forward', 'Shoulder', 'Left Mirror', 'Lap', 'Speedometer', 'Radio', 'Rearview', 'Right Mirror']
 merged_activity_classes = ['Eyes Closed/Lap', 'Forward', 'Left Mirror', 'Speedometer', 'Radio', 'Rearview', 'Right Mirror']
+#activity_classes = ['Eyes Closed', 'Forward', 'Left', 'Speedometer', 'Radio', 'Rearview', 'Right']
+#merged_activity_classes = ['Eyes Closed', 'Forward', 'Left', 'Speedometer', 'Radio', 'Rearview', 'Right']
 args.num_classes = len(activity_classes)
 
 # setup args
@@ -64,10 +65,9 @@ if args.output_dir is None:
     args.output_dir = os.path.join('.', 'experiments', 'inference', args.output_dir)
 
 if not os.path.exists(args.output_dir):
+    os.makedirs(args.output_dir)
     if args.save_viz:
-        os.makedirs(os.path.join(args.output_dir, 'images'))
-    else:
-        os.makedirs(args.output_dir)
+        out_vid = cv2.VideoWriter(os.path.join(args.output_dir, 'out.avi'), cv2.VideoWriter_fourcc(*'XVID'), 5, (448, 288))
 else:
     assert False, 'Output directory already exists!'
 
@@ -81,7 +81,7 @@ if args.cuda:
 
 
 kwargs = {'batch_size': args.batch_size, 'shuffle': False, 'num_workers': 6}
-test_loader = torch.utils.data.DataLoader(GazeDataset(args.dataset_root_path, args.split, False), **kwargs)
+test_loader = torch.utils.data.DataLoader(GazeDataset(args.dataset_root_path, activity_classes, args.split, False), **kwargs)
 
 
 # validation function
@@ -120,8 +120,7 @@ def test(netG_B2A, netGaze):
             im_wo = im_wo[:, :, ::-1]
             im_out = create_viz(im, im_wo, scores, masks, activity_classes)
 
-            out_path = os.path.join(args.output_dir, 'images', '%.6d.jpg' % (count,))
-            cv2.imwrite(out_path, im_out)
+            out_vid.write(im_out)
             count += 1
 
         scores = scores.view(-1, args.num_classes)
@@ -139,13 +138,16 @@ def test(netG_B2A, netGaze):
         f.write("Micro-average accuracy = {:.2f}%\n".format(micro_acc))
         f.write("Micro-average accuracy = {:.2f}%\n------------------------\n".format(macro_acc))
 
+    if args.save_viz:
+        out_vid.release()
+
     return micro_acc, macro_acc
 
 
 if __name__ == '__main__':
     # networks
     netG_B2A = Generator(args.nc, args.nc)
-    netGaze = SqueezeNet(args.version)
+    netGaze = SqueezeNet(args.version, num_classes=args.num_classes)
     
     if args.snapshot_dir is not None:
         if os.path.exists(os.path.join(args.snapshot_dir, 'netG_B2A.pth')):

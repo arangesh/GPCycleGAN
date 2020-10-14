@@ -26,16 +26,17 @@ parser.add_argument('--data-type', type=str, default='ir', help='which data type
 parser.add_argument('--version', type=str, default=None, help='which version of SqueezeNet to load (1_0/1_1)')
 parser.add_argument('--output-dir', type=str, default=None, help='output directory for model and logs')
 parser.add_argument('--snapshot-dir', type=str, default=None, help='directory with pre-trained model snapshots')
+parser.add_argument('--size', type=int, default=224, help='size of the data crop (squared assumed)')
 parser.add_argument('--batch-size', type=int, default=1, metavar='N', help='batch size for training')
 parser.add_argument('--epochs', type=int, default=200, metavar='N', help='number of epochs to train for')
-parser.add_argument('--learning-rate', type=float, default=0.0002, metavar='LR', help='learning rate')
+parser.add_argument('--learning-rate', type=float, default=2e-4, metavar='LR', help='learning rate')
+parser.add_argument('--decay-epoch', type=int, default=100, help='epoch to start linearly decaying the learning rate to 0')
+parser.add_argument('--train-gaze', action='store_true', default=False, help='train GazeNet simultaneously')
+parser.add_argument('--weight-decay', type=float, default=0.0005, metavar='WD', help='weight decay')
 parser.add_argument('--log-schedule', type=int, default=10, metavar='N', help='number of iterations to print/save log after')
 parser.add_argument('--seed', type=int, default=1, help='set seed to some constant value to reproduce experiments')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='do not use cuda for training')
 parser.add_argument('--random-transforms', action='store_true', default=False, help='apply random transforms to input while training')
-parser.add_argument('--decay-epoch', type=int, default=100, help='epoch to start linearly decaying the learning rate to 0')
-parser.add_argument('--size', type=int, default=256, help='size of the data crop (squared assumed)')
-parser.add_argument('--train-gaze', action='store_true', default=False, help='train GazeNet simultaneously')
 
 
 args = parser.parse_args()
@@ -77,8 +78,8 @@ if args.cuda:
 
 
 kwargs = {'batch_size': args.batch_size, 'shuffle': True, 'num_workers': 6}
-train_loader = torch.utils.data.DataLoader(GANDataset(args, [args.data_type + '_no_glasses'], [args.data_type + '_with_glasses'], random_transforms=args.random_transforms, unaligned=True), **kwargs)
-val_loader = torch.utils.data.DataLoader(GazeDataset(os.path.join(args.dataset_root_path, args.data_type + '_all_data'), 'val', False), **kwargs)
+train_loader = torch.utils.data.DataLoader(GANDataset(args, [args.data_type + '_no_glasses'], [args.data_type + '_with_glasses'], activity_classes, random_transforms=args.random_transforms, unaligned=True), **kwargs)
+val_loader = torch.utils.data.DataLoader(GazeDataset(os.path.join(args.dataset_root_path, args.data_type + '_all_data'), activity_classes, 'val', False), **kwargs)
 
 # global var to store best validation accuracy across all epochs
 best_accuracy = 0.0
@@ -280,7 +281,7 @@ if __name__ == '__main__':
     netG_B2A = Generator(args.nc, args.nc)
     netD_A = Discriminator(args.nc)
     netD_B = Discriminator(args.nc)
-    netGaze = SqueezeNet(args.version)
+    netGaze = SqueezeNet(args.version, args.num_classes)
     
     if args.snapshot_dir is not None:
         if os.path.exists(os.path.join(args.snapshot_dir, 'netG_A2B.pth')):
@@ -312,8 +313,8 @@ if __name__ == '__main__':
         lr=args.learning_rate, betas=(0.5, 0.999))
     optimizer_D_A = optim.Adam(netD_A.parameters(), lr=args.learning_rate, betas=(0.5, 0.999))
     optimizer_D_B = optim.Adam(netD_B.parameters(), lr=args.learning_rate, betas=(0.5, 0.999))
-    optimizer_gaze = optim.SGD(netGaze.parameters(), lr=0.0002 if args.train_gaze else 0.0, 
-        momentum=0.9 if args.train_gaze else 0.0, weight_decay=0.0002 if args.train_gaze else 0.0)
+    optimizer_gaze = optim.Adam(netGaze.parameters(), lr=args.learning_rate if args.train_gaze else 0.0, 
+        weight_decay=args.weight_decay if args.train_gaze else 0.0)
 
     lr_scheduler_G = optim.lr_scheduler.LambdaLR(optimizer_G, lr_lambda=LambdaLR(args.epochs, 0, args.decay_epoch).step)
     lr_scheduler_D_A = optim.lr_scheduler.LambdaLR(optimizer_D_A, lr_lambda=LambdaLR(args.epochs, 0, args.decay_epoch).step)
