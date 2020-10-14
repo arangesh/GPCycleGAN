@@ -66,8 +66,6 @@ if args.output_dir is None:
 
 if not os.path.exists(args.output_dir):
     os.makedirs(args.output_dir)
-    if args.save_viz:
-        out_vid = cv2.VideoWriter(os.path.join(args.output_dir, 'out.avi'), cv2.VideoWriter_fourcc(*'XVID'), 5, (448, 288))
 else:
     assert False, 'Output directory already exists!'
 
@@ -89,9 +87,9 @@ def test(netG_B2A, netGaze):
     if netG_B2A is not None:
         netG_B2A.eval()
     netGaze.eval()
+    out_vid = None
     pred_all = np.array([], dtype='int64')
     target_all = np.array([], dtype='int64')
-    count = 0
     
     for idx, (data, target) in enumerate(test_loader):
         if args.cuda:
@@ -120,8 +118,10 @@ def test(netG_B2A, netGaze):
             im_wo = im_wo[:, :, ::-1]
             im_out = create_viz(im, im_wo, scores, masks, activity_classes)
 
+            if out_vid is None:
+                out_vid = cv2.VideoWriter(os.path.join(args.output_dir, 'out.avi'), 
+                    cv2.VideoWriter_fourcc(*'XVID'), 5, (im_out.shape[1], im_out.shape[0]))
             out_vid.write(im_out)
-            count += 1
 
         scores = scores.view(-1, args.num_classes)
         pred = scores.data.max(1)[1]  # got the indices of the maximum, match them
