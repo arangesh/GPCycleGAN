@@ -33,7 +33,7 @@ The prescribed three-step training procedure can be carried out as follows:
 ### Step 1: Train the gaze classifier on images without eyeglasses
 ```shell
 pipenv shell # activate virtual environment
-python gazenet.py --dataset-root-path=/path/to/lisat_gaze_data/ir_no_glasses/ --version=1_1 --snapshot=./weights/squeezenet1_1_rgb.pth --random-transforms
+python gazenet.py --dataset-root-path=/path/to/lisat_gaze_data/ir_no_glasses/ --version=1_1 --snapshot=./weights/squeezenet1_1_imagenet.pth --random-transforms
 ```
 ### Step 2: Train the GPCycleGAN model using the gaze classifier from Step 1
 ```shell
@@ -55,7 +55,7 @@ The prescribed three-step training procedure can be carried out as follows:
 ### Step 1: Train the gaze classifier on images without eyeglasses
 ```shell
 pipenv shell # activate virtual environment
-python gazenet.py --dataset-root-path=/path/to/lisat_gaze_data/rgb_no_glasses/ --version=1_1 --snapshot=./weights/squeezenet1_1_rgb.pth --random-transforms
+python gazenet.py --dataset-root-path=/path/to/lisat_gaze_data/rgb_no_glasses/ --version=1_1 --snapshot=./weights/squeezenet1_1_imagenet.pth --random-transforms
 ```
 ### Step 2: Train the GPCycleGAN model using the gaze classifier from Step 1
 ```shell
