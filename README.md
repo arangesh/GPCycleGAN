@@ -21,11 +21,20 @@ pipenv install https://download.pytorch.org/whl/cu100/torchvision-0.3.0-cp36-cp3
 ```
 
 ## Dataset
+### LISA Gaze Dataset v0
+1) Download the complete RGB dataset for driver gaze classification using [this link](https://drive.google.com/file/d/1Ez-pHW0v-5bRdz8NjTLlzWZPT0GS2rYT/view?usp=sharing).
+2) Unzip the file.
+
+### LISA Gaze Dataset v1
+1) Download the complete RGB dataset for driver gaze classification using [this link](https://drive.google.com/file/d/1YvFzqfDkC2NLX8s0YX0XiMi8SOp_eINx/view?usp=sharing).
+2) Unzip the file.
+
+### LISA Gaze Dataset v2
 1) Download the complete IR+RGB dataset for driver gaze classification using [this link](https://drive.google.com/file/d/1iJTlVytGsmQu9EeB1Iw1-cYwPlOx4-XW/view?usp=sharing).
 2) Unzip the file.
 3) Prepare the train, val and test splits as follows:
 ```shell
-python prepare_gaze_data.py --dataset-dir=/path/to/lisat_gaze_data
+python prepare_gaze_data.py --dataset-dir=/path/to/lisat_gaze_data_v2
 ```
 
 ## Training (IR data)
@@ -33,20 +42,20 @@ The prescribed three-step training procedure can be carried out as follows:
 ### Step 1: Train the gaze classifier on images without eyeglasses
 ```shell
 pipenv shell # activate virtual environment
-python gazenet.py --dataset-root-path=/path/to/lisat_gaze_data/ir_no_glasses/ --version=1_1 --snapshot=./weights/squeezenet1_1_imagenet.pth --random-transforms
+python gazenet.py --dataset-root-path=/path/to/lisat_gaze_data_v2/ir_no_glasses/ --version=1_1 --snapshot=./weights/squeezenet1_1_imagenet.pth --random-transforms
 ```
 ### Step 2: Train the GPCycleGAN model using the gaze classifier from Step 1
 ```shell
-python gpcyclegan.py --dataset-root-path=/path/to/lisat_gaze_data/ --data-type=ir --version=1_1 --snapshot-dir=/path/to/trained/gaze-classifier/directory/ --random-transforms
+python gpcyclegan.py --dataset-root-path=/path/to/lisat_gaze_data_v2/ --data-type=ir --version=1_1 --snapshot-dir=/path/to/trained/gaze-classifier/directory/ --random-transforms
 ```
 ### Step 3.1: Create fake images using the trained GPCycleGAN model
 ```shell
-python create_fake_images.py --dataset-root-path=/path/to/lisat_gaze_data/ir_all_data/ --snapshot-dir=/path/to/trained/gpcyclegan/directory/
-cp /path/to/lisat_gaze_data/ir_all_data/mean_std.mat /path/to/lisat_gaze_data/ir_all_data_fake/mean_std.mat # copy over dataset mean/std information to fake data folder
+python create_fake_images.py --dataset-root-path=/path/to/lisat_gaze_data_v2/ir_all_data/ --snapshot-dir=/path/to/trained/gpcyclegan/directory/
+cp /path/to/lisat_gaze_data_v2/ir_all_data/mean_std.mat /path/to/lisat_gaze_data_v2/ir_all_data_fake/mean_std.mat # copy over dataset mean/std information to fake data folder
 ```
 ### Step 3.2: Finetune the gaze classifier on all fake images
 ```shell
-python gazenet-ft.py --dataset-root-path=/path/to/lisat_gaze_data/ir_all_data_fake/ --version=1_1 --snapshot-dir=/path/to/trained/gpcyclegan/directory/ --random-transforms
+python gazenet-ft.py --dataset-root-path=/path/to/lisat_gaze_data_v2/ir_all_data_fake/ --version=1_1 --snapshot-dir=/path/to/trained/gpcyclegan/directory/ --random-transforms
 exit # exit virtual environment
 ```
 
@@ -55,20 +64,20 @@ The prescribed three-step training procedure can be carried out as follows:
 ### Step 1: Train the gaze classifier on images without eyeglasses
 ```shell
 pipenv shell # activate virtual environment
-python gazenet.py --dataset-root-path=/path/to/lisat_gaze_data/rgb_no_glasses/ --version=1_1 --snapshot=./weights/squeezenet1_1_imagenet.pth --random-transforms
+python gazenet.py --dataset-root-path=/path/to/lisat_gaze_data_v2/rgb_no_glasses/ --version=1_1 --snapshot=./weights/squeezenet1_1_imagenet.pth --random-transforms
 ```
 ### Step 2: Train the GPCycleGAN model using the gaze classifier from Step 1
 ```shell
-python gpcyclegan.py --dataset-root-path=/path/to/lisat_gaze_data/ --data-type=rgb --version=1_1 --snapshot-dir=/path/to/trained/gaze-classifier/directory/ --random-transforms
+python gpcyclegan.py --dataset-root-path=/path/to/lisat_gaze_data_v2/ --data-type=rgb --version=1_1 --snapshot-dir=/path/to/trained/gaze-classifier/directory/ --random-transforms
 ```
 ### Step 3.1: Create fake images using the trained GPCycleGAN model
 ```shell
-python create_fake_images.py --dataset-root-path=/path/to/lisat_gaze_data/rgb_all_data/ --snapshot-dir=/path/to/trained/gpcyclegan/directory/
-cp /path/to/lisat_gaze_data/rgb_all_data/mean_std.mat /path/to/lisat_gaze_data/rgb_all_data_fake/mean_std.mat # copy over dataset mean/std information to fake data folder
+python create_fake_images.py --dataset-root-path=/path/to/lisat_gaze_data_v2/rgb_all_data/ --snapshot-dir=/path/to/trained/gpcyclegan/directory/
+cp /path/to/lisat_gaze_data_v2/rgb_all_data/mean_std.mat /path/to/lisat_gaze_data_v2/rgb_all_data_fake/mean_std.mat # copy over dataset mean/std information to fake data folder
 ```
 ### Step 3.2: Finetune the gaze classifier on all fake images
 ```shell
-python gazenet-ft.py --dataset-root-path=/path/to/lisat_gaze_data/rgb_all_data_fake/ --version=1_1 --snapshot-dir=/path/to/trained/gpcyclegan/directory/ --random-transforms
+python gazenet-ft.py --dataset-root-path=/path/to/lisat_gaze_data_v2/rgb_all_data_fake/ --version=1_1 --snapshot-dir=/path/to/trained/gpcyclegan/directory/ --random-transforms
 exit # exit virtual environment
 ```
 
@@ -76,7 +85,7 @@ exit # exit virtual environment
 Inference can be carried out using [this](https://github.com/arangesh/GPCycleGAN/blob/master/infer.py) script as follows:
 ```shell
 pipenv shell # activate virtual environment
-python infer.py --dataset-root-path=/path/to/lisat_gaze_data/ir_all_data/ --split=test --version=1_1 --snapshot-dir=/path/to/trained/ir-models/directory/
+python infer.py --dataset-root-path=/path/to/lisat_gaze_data_v2/ir_all_data/ --split=test --version=1_1 --snapshot-dir=/path/to/trained/ir-models/directory/
 exit # exit virtual environment
 ```
 
@@ -84,7 +93,7 @@ exit # exit virtual environment
 Inference can be carried out using [this](https://github.com/arangesh/GPCycleGAN/blob/master/infer.py) script as follows:
 ```shell
 pipenv shell # activate virtual environment
-python infer.py --dataset-root-path=/path/to/lisat_gaze_data/rgb_all_data/ --split=val --version=1_1 --snapshot-dir=/path/to/trained/rgb-models/directory/
+python infer.py --dataset-root-path=/path/to/lisat_gaze_data_v2/rgb_all_data/ --split=val --version=1_1 --snapshot-dir=/path/to/trained/rgb-models/directory/
 exit # exit virtual environment
 ```
 

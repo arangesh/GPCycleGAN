@@ -54,8 +54,6 @@ else:
 # Output class labels
 activity_classes = ['Eyes Closed', 'Forward', 'Shoulder', 'Left Mirror', 'Lap', 'Speedometer', 'Radio', 'Rearview', 'Right Mirror']
 merged_activity_classes = ['Eyes Closed/Lap', 'Forward', 'Left Mirror', 'Speedometer', 'Radio', 'Rearview', 'Right Mirror']
-#activity_classes = ['Eyes Closed', 'Forward', 'Left', 'Speedometer', 'Radio', 'Rearview', 'Right']
-#merged_activity_classes = ['Eyes Closed', 'Forward', 'Left', 'Speedometer', 'Radio', 'Rearview', 'Right']
 args.num_classes = len(activity_classes)
 
 # setup args
