@@ -32,6 +32,7 @@ parser.add_argument('--epochs', type=int, default=200, metavar='N', help='number
 parser.add_argument('--learning-rate', type=float, default=2e-4, metavar='LR', help='learning rate')
 parser.add_argument('--decay-epoch', type=int, default=100, help='epoch to start linearly decaying the learning rate to 0')
 parser.add_argument('--train-gaze', action='store_true', default=False, help='train GazeNet simultaneously')
+parser.add_argument('--tau', type=float, default=0.01, help='sigmoid temperature used in gaze loss')
 parser.add_argument('--weight-decay', type=float, default=0.0005, metavar='WD', help='weight decay')
 parser.add_argument('--log-schedule', type=int, default=10, metavar='N', help='number of iterations to print/save log after')
 parser.add_argument('--seed', type=int, default=1, help='set seed to some constant value to reproduce experiments')
@@ -135,7 +136,7 @@ def train(netG_A2B, netG_B2A, netD_A, netD_B, netGaze, epoch):
         _, masks_real_A = netGaze(real_A_gaze.repeat(1, int(3 / args.nc), 1, 1))
         recovered_A_gaze = gan2gaze(recovered_A, val_loader.dataset.mean[0:args.nc], val_loader.dataset.std[0:args.nc])
         _, masks_rec_A = netGaze(recovered_A_gaze.repeat(1, int(3 / args.nc), 1, 1))
-        loss_gaze = criterion_gaze(masks_real_A, masks_rec_A)*10.0
+        loss_gaze = criterion_gaze(masks_real_A, masks_rec_A)
 
         # compute the train accuracy of (netB2A-->netGaze) model
         same_A_gaze = gan2gaze(same_A, val_loader.dataset.mean[0:args.nc], val_loader.dataset.std[0:args.nc])
@@ -306,7 +307,7 @@ if __name__ == '__main__':
     criterion_GAN = torch.nn.MSELoss()
     criterion_cycle = torch.nn.L1Loss()
     criterion_identity = torch.nn.L1Loss()
-    criterion_gaze = torch.nn.MSELoss()
+    criterion_gaze = lambda cam1, cam2: F.mse_loss(torch.sigmoid(args.tau*cam1), torch.sigmoid(args.tau*cam2))
 
     # Optimizers & LR schedulers
     optimizer_G = optim.Adam(itertools.chain(netG_A2B.parameters(), netG_B2A.parameters()), 
