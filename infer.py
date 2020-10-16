@@ -134,7 +134,7 @@ def test(netG_B2A, netGaze):
     with open(os.path.join(args.output_dir, "logs.txt"), "a") as f:
         f.write("\n------------------------\n")
         f.write("Micro-average accuracy = {:.2f}%\n".format(micro_acc))
-        f.write("Micro-average accuracy = {:.2f}%\n------------------------\n".format(macro_acc))
+        f.write("Macro-average accuracy = {:.2f}%\n------------------------\n".format(macro_acc))
 
     if args.save_viz:
         out_vid.release()
