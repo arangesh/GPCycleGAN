@@ -89,12 +89,13 @@ best_accuracy = 0.0
 # training function
 def train(netG_A2B, netG_B2A, netD_A, netD_B, netGaze, epoch):
     epoch_loss = list()
-    correct = 0
     netG_A2B.train()
     netG_B2A.train()
     netD_A.train()
     netD_B.train()
     netGaze.train()
+    pred_all = np.array([], dtype='int64')
+    target_all = np.array([], dtype='int64')
     for b_idx, batch in enumerate(train_loader):
         # Set model input
         real_A = Variable(input_A.copy_(batch['A'])) # (B, C, H, W)
@@ -146,10 +147,12 @@ def train(netG_A2B, netG_B2A, netD_A, netD_B, netGaze, epoch):
 
         scores_same_A = scores_same_A.view(-1, args.num_classes)
         pred = scores_same_A.data.max(1)[1]  # get the index of the max log-probability
-        correct += pred.eq(targets_A.data).cpu().sum()
+        pred_all   = np.append(pred_all, pred.cpu().numpy())
+        target_all = np.append(target_all, targets_A.cpu().numpy())
         scores_fake_A = scores_fake_A.view(-1, args.num_classes)
         pred = scores_fake_A.data.max(1)[1]  # get the index of the max log-probability
-        correct += pred.eq(targets_B.data).cpu().sum()
+        pred_all   = np.append(pred_all, pred.cpu().numpy())
+        target_all = np.append(target_all, targets_B.cpu().numpy())
 
         # Total loss for Generators and GazeNet
         loss_G = loss_identity_A + loss_identity_B + loss_GAN_A2B + loss_GAN_B2A + loss_cycle_ABA + loss_cycle_BAB + loss_gaze
@@ -219,12 +222,12 @@ def train(netG_A2B, netG_B2A, netD_A, netD_B, netGaze, epoch):
     lr_scheduler_D_B.step()
 
     # now that the epoch is completed calculate statistics and store logs
+    train_accuracy, _ =  plot_confusion_matrix(target_all, pred_all, merged_activity_classes)
     avg_loss = mean(epoch_loss)
     print("------------------------\nAverage loss for epoch = {:.2f}".format(avg_loss))
     with open(os.path.join(args.output_dir, "logs.txt"), "a") as f:
         f.write("\n------------------------\nAverage loss for epoch = {:.2f}\n".format(avg_loss))
 
-    train_accuracy = 100.0*float(correct)/float(2*len(train_loader.dataset))
     print("Accuracy for epoch = {:.2f}%\n------------------------".format(train_accuracy))
     with open(os.path.join(args.output_dir, "logs.txt"), "a") as f:
         f.write("Accuracy for epoch = {:.2f}%\n------------------------\n".format(train_accuracy))
