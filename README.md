@@ -37,7 +37,7 @@ To use this dataset, do the following:
 2) Unzip the file.
 
 ### LISA Gaze Dataset v2
-This is the dataset introduced in the paper Driver Gaze Estimation in the Real World: Overcoming the Eyeglass Challenge](http://cvrr.ucsd.edu/publications/2020/GPCycleGAN.pdf).
+This is the dataset introduced in the paper [Driver Gaze Estimation in the Real World: Overcoming the Eyeglass Challenge](http://cvrr.ucsd.edu/publications/2020/GPCycleGAN.pdf).
 To use this dataset, do the following:
 1) Download the complete IR+RGB dataset for driver gaze classification using [this link](https://drive.google.com/file/d/1iJTlVytGsmQu9EeB1Iw1-cYwPlOx4-XW/view?usp=sharing).
 2) Unzip the file.
@@ -137,12 +137,12 @@ exit # exit virtual environment
 ```
 
 ## Pre-trained Weights
-You can download our pre-trained (GPCycleGAN + gaze classifier) weights for both v2 IR and RGB data using [this link](https://drive.google.com/file/d/1FbYhyoSbCSo6l0b08a6kMPIgLwf7FHC-/view?usp=sharing).
+You can download our pre-trained model weights using [this link](https://drive.google.com/file/d/1FbYhyoSbCSo6l0b08a6kMPIgLwf7FHC-/view?usp=sharing).
 
-Config files, logs, results and snapshots from running the above scripts will be stored in the `GPCycleGAN/experiments` folder by default.
+Config files, logs, results, snapshots, and visualizations from running the above scripts will be stored in the `GPCycleGAN/experiments` folder by default.
 
 ## Citations
-If you find out data, code, and/or models useful in your research, please consider citing the respective papers:
+If you find our data, code, and/or models useful in your research, please consider citing the following papers:
 
     @inproceedings{vora2017generalizing,
       title={On generalizing driver gaze zone estimation using convolutional neural networks},
