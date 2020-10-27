@@ -98,15 +98,18 @@ def train(netGaze, epoch):
 
         scores, masks = netGaze(data)
         scores = scores.view(-1, args.num_classes)
-        loss = F.nll_loss(scores, targets)
 
         # compute the accuracy
-        pred = scores.data.max(1)[1]  # get the index of the max log-probability
-        correct += pred.eq(targets.data).cpu().sum()
+        pred = scores.data.max(1)[1].detach()  # get the index of the max log-probability
+        weights = pred.eq(targets.data).type_as(scores)
 
-        epoch_loss.append(loss.item())
+        # compute selective cross-entropy loss
+        loss = torch.mean(F.nll_loss(scores, targets, reduction='none') * weights)
         loss.backward()
         optimizer.step()
+
+        correct += weights.cpu().sum()
+        epoch_loss.append(loss.item())
 
         if b_idx % args.log_schedule == 0:
             print('Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
