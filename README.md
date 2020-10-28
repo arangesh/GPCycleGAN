@@ -3,6 +3,7 @@ PyTorch implementation of the training and inference procedures described in the
 * [On Generalizing Driver Gaze Zone Estimation using Convolutional Neural Networks," IEEE Intelligent Vehicles Symposium, 2017](http://cvrr.ucsd.edu/publications/2017/IV2017-VoraTrivedi-OnGeneralizingGazeZone.pdf)
 * [Driver Gaze Zone Estimation using Convolutional Neural Networks: A General Framework and Ablative Analysis," IEEE Transactions on Intelligent Vehicles, 2018](http://cvrr.ucsd.edu/publications/2018/sourabh_gaze_zone.pdf)
 * [Driver Gaze Estimation in the Real World: Overcoming the Eyeglass Challenge, IEEE Intelligent Vehicles Symposium, 2020](http://cvrr.ucsd.edu/publications/2020/GPCycleGAN.pdf).
+* [Gaze Preserving CycleGANs for Eyeglass Removal & Persistent Gaze Estimation, arXiv:2002.02077, 2020](http://cvrr.ucsd.edu/publications/2020/GPCycleGAN-extended.pdf).
 
 Parts of the CycleGAN code have been adapted from the [PyTorch-CycleGAN](https://github.com/aitorzip/PyTorch-CycleGAN) respository.
 
@@ -165,7 +166,7 @@ If you find our data, code, and/or models useful in your research, please consid
     }
 
     @article{rangesh2020driver,
-      title={Driver Gaze Estimation in the Real World: Overcoming the Eyeglass Challenge},
+      title={Gaze Preserving CycleGANs for Eyeglass Removal & Persistent Gaze Estimation},
       author={Rangesh, Akshay and Zhang, Bowen and Trivedi, Mohan M},
       journal={arXiv preprint arXiv:2002.02077},
       year={2020}
