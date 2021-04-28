@@ -40,7 +40,9 @@ class GANDataset(Dataset):
                 transforms.Normalize(self.mean, self.std) ]
             self.transforms = transforms.Compose(transforms_)
         else:
-            self.transforms = transforms.Normalize(self.mean, self.std)
+            transforms_ = [ transforms.ToTensor(),
+                transforms.Normalize(self.mean, self.std) ]
+            self.transforms = transforms.Compose(transforms_)
         self.unaligned = unaligned
 
         self.images_A, self.targets_A = [], []
